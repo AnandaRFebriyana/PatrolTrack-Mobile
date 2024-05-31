@@ -31,9 +31,8 @@ class PermissionService {
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
 
-      if (response.statusCode == 201) {
-        final result = jsonDecode(responseData);
-        return result['message'];
+       if (response.statusCode == 201) {
+        return true;
       } else {
         final errorResult = jsonDecode(responseData);
         throw '${errorResult['message'] ?? 'Unknown error occurred'}';

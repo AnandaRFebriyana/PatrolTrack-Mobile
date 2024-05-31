@@ -7,7 +7,6 @@ import 'package:patrol_track_mobile/core/models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Setting extends StatelessWidget {
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
