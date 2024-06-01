@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:patrol_track_mobile/components/history_card.dart';
 import 'package:patrol_track_mobile/core/controllers/attendance_controller.dart';
@@ -36,6 +39,18 @@ class _HomeState extends State<Home> {
     final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
     final format = DateFormat.Hm();
     return format.format(dt);
+  }
+
+  void _pickImage(BuildContext context) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      File image = File(pickedFile.path);
+      Get.toNamed('/presensi', arguments: image);
+    } else {
+      print('No image selected.');
+    }
   }
 
   @override
@@ -90,13 +105,17 @@ class _HomeState extends State<Home> {
                     if (snapshot.data!.isEmpty) {
                       return const SizedBox();
                     } else {
-                      final start = snapshot.data![0].startTime;
-                      final end = snapshot.data![0].endTime;
+                      final attendance = snapshot.data![0];
+                      final start = attendance.checkIn != null ? attendance.checkIn! : attendance.startTime;
+                      final end = attendance.checkOut != null ? attendance.checkOut! : attendance.endTime;
+                      final statusIn = attendance.checkIn != null ? "Done" : "Go to Work";
+                      final statusOut = attendance.checkOut != null ? "Done" : "Go Home";
+
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          twoCard("Check In", _formatTime(start), "Go to Work", FontAwesomeIcons.signIn),
-                          twoCard("Check Out", _formatTime(end), "Go to Work", FontAwesomeIcons.signOut)
+                          twoCard("Check In", _formatTime(start), statusIn, FontAwesomeIcons.signIn),
+                          twoCard("Check Out", _formatTime(end), statusOut, FontAwesomeIcons.signOut)
                         ],
                       );
                     }
@@ -278,7 +297,8 @@ class _HomeState extends State<Home> {
 
   Widget twoCard(String title, String time, String subtitle, IconData icon) {
     return GestureDetector(
-      onTap: () => Get.toNamed('/presensi'),
+      // onTap: () => Get.toNamed('/presensi'),
+      onTap: () => _pickImage(context),
       child: Container(
         width: 165,
         height: 134,

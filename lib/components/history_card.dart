@@ -62,12 +62,12 @@ class MyCard extends StatelessWidget {
                   ),
                   child: Icon(
                     _getIcon(),
-                    color: Color(0xFF305E8B),
+                    color: const Color(0xFF305E8B),
                   ),
                 ),
               ],
             ),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -87,7 +87,7 @@ class MyCard extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Expanded(
               flex: 2,
               child: Column(

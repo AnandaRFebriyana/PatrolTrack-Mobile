@@ -1,10 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:patrol_track_mobile/components/button.dart';
 import 'package:patrol_track_mobile/components/header.dart';
 import 'package:patrol_track_mobile/core/utils/constant.dart';
 
@@ -15,24 +17,26 @@ class Presensi extends StatefulWidget {
 
 class _PresensiState extends State<Presensi> {
   Position? _currentLocation;
-  late bool servicePermission = false;
-  late LocationPermission permission;
-  File? _image;
-
   String _currentAddress = "";
   bool _isAtTargetLocation = false;
+  File? _image;
 
   @override
   void initState() {
     super.initState();
+    _image = Get.arguments as File?;
     _initializeLocation();
   }
 
   Future<void> _initializeLocation() async {
-    _currentLocation = await _getCurrentLocation();
-    if (_currentLocation != null) {
-      await _getAddressFromCoordinates();
-      _checkIfAtTargetLocation();
+    try {
+      _currentLocation = await _getCurrentLocation();
+      if (_currentLocation != null) {
+        await _getAddressFromCoordinates();
+        _checkIfAtTargetLocation();
+      }
+    } catch (e) {
+      print("Error initializing location: $e");
     }
     if (mounted) {
       setState(() {});
@@ -40,39 +44,37 @@ class _PresensiState extends State<Presensi> {
   }
 
   Future<Position> _getCurrentLocation() async {
-    servicePermission = await Geolocator.isLocationServiceEnabled();
-    if (!servicePermission) {
-      print("Service Disabled");
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
       return Future.error("Location services are disabled.");
     }
-    permission = await Geolocator.checkPermission();
+
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.deniedForever) {
-        return Future.error("Location permissions are permanently denied");
+      if (permission == LocationPermission.denied) {
+        return Future.error("Location permissions are denied");
       }
     }
-
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    print("Current position: ${position.latitude}, ${position.longitude}");
-    return position;
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error("Location permissions are permanently denied");
+    }
+    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
   }
 
   Future<void> _getAddressFromCoordinates() async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
-          _currentLocation!.latitude, _currentLocation!.longitude);
-      Placemark place = placemarks[0];
-      if (mounted) {
-        setState(() {
-          _currentAddress =
-              '${place.street}, ${place.subLocality}, ${place.locality}, '
-              '${place.postalCode}, ${place.country}';
-        });
-      }
-      print("Current address: $_currentAddress");
+        _currentLocation!.latitude,
+        _currentLocation!.longitude,
+      );
+      Placemark place = placemarks.first;
+      setState(() {
+        _currentAddress =
+            '${place.street}, ${place.subLocality}, ${place.locality}, ${place.country}';
+      });
     } catch (e) {
-      print(e);
+      print("Error getting address: $e");
     }
   }
 
@@ -83,33 +85,16 @@ class _PresensiState extends State<Presensi> {
       Constant.targetLatitude,
       Constant.targetLongitude,
     );
-    print("Distance to target: $distance meters");
-
-    if (mounted) {
-      setState(() {
-        _isAtTargetLocation = distance <= Constant.allowedDistance;
-      });
-    }
+    setState(() {
+      _isAtTargetLocation = distance <= Constant.allowedDistance;
+    });
   }
 
-  void _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-
-    if (mounted) {
-      setState(() {
-        if (pickedFile != null) {
-          _image = File(pickedFile.path);
-        } else {
-          print('No image selected.');
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
+  String _getFormattedDate() {
+    DateTime now = DateTime.now();
+    String day = DateFormat('EEEE', 'id_ID').format(now);
+    String formattedDate = DateFormat('dd-MM-yyyy').format(now);
+    return '$day, $formattedDate';
   }
 
   @override
@@ -119,80 +104,100 @@ class _PresensiState extends State<Presensi> {
         children: [
           const Header(title: "Presensi", backButton: true),
           Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "Location Coordinates",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    Container(
+                      height: 250,
+                      width: 200,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey, width: 2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: _image == null
+                          ? const Icon(
+                              Icons.person,
+                              color: Colors.grey,
+                              size: 200,
+                            )
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.file(
+                                _image!,
+                                fit: BoxFit.cover,
+                                height: 250,
+                                width: 200,
+                              ),
+                            ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "Latitude = ${_currentLocation?.latitude ?? 'Loading...'} ; Longitude = ${_currentLocation?.longitude ?? 'Loading...'}",
-                  ),
-                  const SizedBox(height: 30),
-                  const Text(
-                    "Location Address",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _currentAddress.isNotEmpty ? _currentAddress : "Loading...",
-                  ),
-                  const SizedBox(height: 30),
-                  Text(
-                    _isAtTargetLocation
-                        ? "You are within the allowed distance from the target location."
-                        : "You are outside the allowed distance from the target location.",
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: _isAtTargetLocation ? Colors.green : Colors.red,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    height: 200,
-                    width: 200,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey, width: 2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: _image == null
-                        ? const Icon(
-                            Icons.camera_alt,
-                            color: Colors.grey,
-                            size: 100,
-                          )
-                        : Image.file(
-                            _image!,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                  const SizedBox(height: 50),
-                  ElevatedButton.icon(
-                    onPressed: _pickImage,
-                    icon: const Icon(Icons.camera_alt, size: 24),
-                    label: const Text('Take a Photo'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      textStyle: GoogleFonts.poppins(
+                    const SizedBox(height: 20),
+                    Text(
+                      _getFormattedDate(),
+                      style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
-                      shape: RoundedRectangleBorder(
+                    ),
+                    const SizedBox(height: 5),
+                    StreamBuilder<DateTime>(
+                      stream: Stream.periodic(
+                          const Duration(seconds: 1), (_) => DateTime.now()),
+                      builder: (context, snapshot) {
+                        return Text(
+                          DateFormat('HH:mm:ss').format(DateTime.now()),
+                          style: GoogleFonts.poppins(fontSize: 15),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(10),
                       ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            color: Colors.grey[700],
+                          ),
+                          const SizedBox(width: 5),
+                          Flexible(
+                            child: Text(
+                              _currentAddress.isNotEmpty
+                                  ? _currentAddress
+                                  : "Loading...",
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                              ),
+                              softWrap: true,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 30),
+                    Text(
+                      _isAtTargetLocation
+                          ? "You are within the allowed distance from the target location."
+                          : "You are outside the allowed distance from the target location.",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        color: _isAtTargetLocation ? Colors.green : Colors.red,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    MyButton(text: "Simpan Presensi", onPressed: () {}),
+                  ],
+                ),
               ),
             ),
           ),
