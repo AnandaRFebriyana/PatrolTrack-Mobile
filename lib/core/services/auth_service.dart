@@ -36,7 +36,8 @@ class AuthService {
     }
   }
 
-  static Future<User> getUser(String token) async {
+  static Future<User> getUser() async {
+    String? token = await Constant.getToken();
     final url = Uri.parse('${Constant.BASE_URL}/get-user');
     final response = await http.get(
       url,
@@ -49,4 +50,18 @@ class AuthService {
       throw Exception('Failed to load user data');
     }
   }
+
+  // static Future<User> getUser(String token) async {
+  //   final url = Uri.parse('${Constant.BASE_URL}/get-user');
+  //   final response = await http.get(
+  //     url,
+  //     headers: {'Authorization': '$token'},
+  //   );
+  //   if (response.statusCode == 200) {
+  //     final result = jsonDecode(response.body);
+  //     return User.fromJson(result['data']);
+  //   } else {
+  //     throw Exception('Failed to load user data');
+  //   }
+  // }
 }

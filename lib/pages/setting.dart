@@ -1,12 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:patrol_track_mobile/components/button.dart';
 import 'package:patrol_track_mobile/components/header.dart';
 import 'package:patrol_track_mobile/core/controllers/auth_controller.dart';
 import 'package:patrol_track_mobile/core/models/user.dart';
+import 'package:patrol_track_mobile/core/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class Setting extends StatelessWidget {
+class Setting extends StatefulWidget {
+  @override
+  _SettingState createState() => _SettingState();
+}
+
+class _SettingState extends State<Setting> {
+  late User user = User(name: '', email: '');
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUser();
+  }
+
+  Future<void> fetchUser() async {
+    try {
+      User getUser = await AuthService.getUser();
+      setState(() {
+        user = getUser;
+      });
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,32 +41,19 @@ class Setting extends StatelessWidget {
           const Header(title: "Profile"),
           const SizedBox(height: 20),
           Expanded(
-            child: FutureBuilder<User>(
-              future: AuthController.fetchUser(context),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasData) {
-                    return _buildSetting(context, snapshot.data!);
-                  } else if (snapshot.hasError) {
-                    debugPrint('Error: ${snapshot.error}');
-                    return Center(child: Text('Failed to load user data'));
-                  }
-                }
-                return Center(child: CircularProgressIndicator());
-              },
-            ),
+            child: _buildSetting(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSetting(BuildContext context, User user) {
+  Widget _buildSetting(BuildContext context) {
     final TextEditingController name = TextEditingController(text: user.name);
     final TextEditingController email = TextEditingController(text: user.email);
-    final TextEditingController birthDate = TextEditingController(text: user.birthDate);
-    final TextEditingController address = TextEditingController(text: user.address);
-    final TextEditingController phoneNumber = TextEditingController(text: user.phoneNumber);
+    final TextEditingController birthDate = TextEditingController(text: user.birthDate != null ? DateFormat('dd MMMM yyyy').format(DateTime.parse(user.birthDate!)) : '',);
+    final TextEditingController address = TextEditingController(text: user.address ?? '');
+    final TextEditingController phoneNumber = TextEditingController(text: user.phoneNumber ?? '');
 
     return Column(
       children: [
@@ -109,13 +122,13 @@ class Setting extends StatelessWidget {
   Widget buildTextField(TextEditingController controller, IconData icon, {int maxLines = 1}) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFFF2F2F3),
+        color: const Color(0xFFF2F2F3),
         borderRadius: BorderRadius.circular(7),
       ),
       child: Row(
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Icon(
               icon,
               color: Colors.grey,

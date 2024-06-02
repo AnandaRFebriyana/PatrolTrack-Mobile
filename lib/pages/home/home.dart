@@ -8,10 +8,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:patrol_track_mobile/components/history_card.dart';
 import 'package:patrol_track_mobile/core/controllers/attendance_controller.dart';
-import 'package:patrol_track_mobile/core/controllers/auth_controller.dart';
 import 'package:patrol_track_mobile/core/controllers/report_controller.dart';
 import 'package:patrol_track_mobile/core/models/attendance.dart';
 import 'package:patrol_track_mobile/core/models/user.dart';
+import 'package:patrol_track_mobile/core/services/auth_service.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -20,7 +20,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   DateTime today = DateTime.now();
-  late Future<User> _userFuture;
+  late User user = User(name: '', email: '');
   late Future<List<Attendance>> _attendanceFuture;
   late Future<List<Attendance>> _todayAttendanceFuture;
   late Future<bool> _todayReportFuture;
@@ -28,10 +28,21 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    _userFuture = AuthController.fetchUser(context);
+    fetchUser();
     _attendanceFuture = AttendanceController.getAttendanceHistory(context);
     _todayAttendanceFuture = AttendanceController.getToday(context);
     _todayReportFuture = ReportController.checkTodayReport(context);
+  }
+
+  Future<void> fetchUser() async {
+    try {
+      User getUser = await AuthService.getUser();
+      setState(() {
+        user = getUser;
+      });
+    } catch (e) {
+      print('Error: $e');
+    }
   }
 
   String _formatTime(TimeOfDay time) {
@@ -58,15 +69,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
       body: Column(
         children: [
-          FutureBuilder<User>(
-            future: _userFuture,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return _headerHome(snapshot.data!);
-              } else
-                return Container();
-            },
-          ),
+          _headerHome(),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -232,7 +235,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _headerHome(User user) {
+  Widget _headerHome() {
     return Container(
       padding: const EdgeInsets.only(top: 40, left: 15, right: 15, bottom: 5),
       decoration: const BoxDecoration(
@@ -263,7 +266,7 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(left: 3, bottom: 25),
+                  padding: const EdgeInsets.only(left: 3, bottom: 25),
                   child: Text('${user.name}',
                     // child: Text('Fanidiya Tasya',
                     style: GoogleFonts.poppins(
@@ -361,10 +364,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildPatrolCard(
-      {String title = '',
-      IconData icon = Icons.error,
-      Color color = Colors.black}) {
+  Widget _buildPatrolCard({String title = '', IconData icon = Icons.error, Color color = Colors.black}) {
     return Card(
       margin: const EdgeInsets.all(20),
       child: Container(

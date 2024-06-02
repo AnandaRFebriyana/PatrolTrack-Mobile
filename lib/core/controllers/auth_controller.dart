@@ -42,18 +42,18 @@ class AuthController {
     }
   }
 
-  static Future<User> fetchUser(BuildContext context) async {
-    try {
-      String? token = await Constant.getToken();
+  // static Future<User> fetchUser(BuildContext context) async {
+  //   try {
+  //     String? token = await Constant.getToken();
 
-      if (token != null) {
-        final user = await AuthService.getUser(token);
-        return user;
-      } else {
-        throw Exception('Please login first.');
-      }
-    } catch (e) {
-      throw e;
-    }
-  }
+  //     if (token != null) {
+  //       final user = await AuthService.getUser(token);
+  //       return user;
+  //     } else {
+  //       throw Exception('Please login first.');
+  //     }
+  //   } catch (e) {
+  //     throw e;
+  //   }
+  // }
 }
