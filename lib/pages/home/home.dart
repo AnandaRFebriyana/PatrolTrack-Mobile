@@ -1,11 +1,14 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 import 'package:patrol_track_mobile/components/history_card.dart';
 import 'package:patrol_track_mobile/core/controllers/attendance_controller.dart';
 import 'package:patrol_track_mobile/core/controllers/report_controller.dart';
@@ -19,19 +22,19 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  DateTime today = DateTime.now();
   late User user = User(name: '', email: '');
-  late Future<List<Attendance>> _attendanceFuture;
-  late Future<List<Attendance>> _todayAttendanceFuture;
+  DateTime today = DateTime.now();
+  late Future<Attendance> _todayAttendanceFuture;
   late Future<bool> _todayReportFuture;
+  late Future<List<Attendance>> _attendanceFuture;
 
   @override
   void initState() {
     super.initState();
     fetchUser();
-    _attendanceFuture = AttendanceController.getAttendanceHistory(context);
     _todayAttendanceFuture = AttendanceController.getToday(context);
     _todayReportFuture = ReportController.checkTodayReport(context);
+    _attendanceFuture = AttendanceController.getAttendanceHistory(context);
   }
 
   Future<void> fetchUser() async {
@@ -52,13 +55,38 @@ class _HomeState extends State<Home> {
     return format.format(dt);
   }
 
+  Future<File> compressImage(File imageFile) async {
+    List<int> imageBytes = await imageFile.readAsBytes();
+    img.Image? image = img.decodeImage(Uint8List.fromList(imageBytes));
+    img.Image resizedImage = img.copyResize(image!, width: 800);
+    List<int> compressedBytes = img.encodeJpg(resizedImage, quality: 50);
+
+    Directory tempDir = await getTemporaryDirectory();
+    String tempPath = tempDir.path;
+    File compressedFile =
+        File('$tempPath/compressed_${imageFile.path.split('/').last}')
+          ..writeAsBytesSync(compressedBytes);
+
+    return compressedFile;
+  }
+
   void _pickImage(BuildContext context) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
     if (pickedFile != null) {
       File image = File(pickedFile.path);
-      Get.toNamed('/presensi', arguments: image);
+      print('Photo Size: ${image.lengthSync()} bytes');
+
+      if (image.lengthSync() > 2048 * 1024) {
+        image = await compressImage(image);
+        print('Compressed Photo Size: ${image.lengthSync()} bytes');
+      }
+      final attendance = await _todayAttendanceFuture;
+      int id = attendance.id;
+      print("Attendance ID: $id");
+
+      Get.toNamed('/presensi', arguments: {'id': id, 'image': image});
     } else {
       print('No image selected.');
     }
@@ -97,18 +125,18 @@ class _HomeState extends State<Home> {
                   ],
                 ),
               ),
-              FutureBuilder<List<Attendance>>(
+              FutureBuilder<Attendance>(
                 future: _todayAttendanceFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const SizedBox();
                   } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
+                    return const SizedBox();
                   } else {
-                    if (snapshot.data!.isEmpty) {
+                    if (snapshot.data!.isNull) {
                       return const SizedBox();
                     } else {
-                      final attendance = snapshot.data![0];
+                      final attendance = snapshot.data!;
                       final start = attendance.checkIn != null ? attendance.checkIn! : attendance.startTime;
                       final end = attendance.checkOut != null ? attendance.checkOut! : attendance.endTime;
                       final statusIn = attendance.checkIn != null ? "Done" : "Go to Work";
@@ -251,7 +279,7 @@ class _HomeState extends State<Home> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.only(left: 3, bottom: 3),
                   child: Text(
@@ -336,14 +364,14 @@ class _HomeState extends State<Home> {
                         ),
                         child: Icon(icon),
                       ),
-                      SizedBox(width: 5),
+                      const SizedBox(width: 5),
                       Text(
                         title,
                         style: GoogleFonts.poppins(fontSize: 14),
                       ),
                     ],
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     time,
                     style: GoogleFonts.poppins(
@@ -380,7 +408,7 @@ class _HomeState extends State<Home> {
               color: color,
               size: 30,
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Text(
               title,
               style: GoogleFonts.poppins(fontSize: 15),

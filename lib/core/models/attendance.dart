@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class Attendance {
@@ -8,6 +9,10 @@ class Attendance {
   final TimeOfDay? checkIn;
   final TimeOfDay? checkOut;
   final String? status;
+  final File? photo;
+  final double? longitude;
+  final double? latitude;
+  final String? locationAddress;
 
   Attendance({
     required this.id,
@@ -17,6 +22,10 @@ class Attendance {
     this.checkIn,
     this.checkOut,
     this.status,
+    this.photo,
+    this.longitude,
+    this.latitude,
+    this.locationAddress,
   });
 
   factory Attendance.fromJson(Map<String, dynamic> json) {
@@ -28,6 +37,10 @@ class Attendance {
       checkIn: _parseTimeOfDay(json['check_in_time']),
       checkOut: _parseTimeOfDay(json['check_out_time']),
       status: json['status'] as String?,
+      photo: json['photo'] != null ? File(json['photo']) : null,
+      longitude: json['longitude'] != null ? double.parse(json['longitude']) : null,
+      latitude: json['latitude'] != null ? double.parse(json['latitude']) : null,
+      locationAddress: json['location_address'] as String?,
     );
   }
 

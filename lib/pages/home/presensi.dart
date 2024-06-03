@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:patrol_track_mobile/components/button.dart';
 import 'package:patrol_track_mobile/components/header.dart';
+import 'package:patrol_track_mobile/core/controllers/attendance_controller.dart';
 import 'package:patrol_track_mobile/core/utils/constant.dart';
 
 class Presensi extends StatefulWidget {
@@ -20,12 +22,31 @@ class _PresensiState extends State<Presensi> {
   String _currentAddress = "";
   bool _isAtTargetLocation = false;
   File? _image;
+  int? _id;
 
   @override
   void initState() {
     super.initState();
-    _image = Get.arguments as File?;
+    final args = Get.arguments as Map<String, dynamic>;
+    _image = args['image'] as File?;
+    _id = args['id'] as int?;
     _initializeLocation();
+  }
+
+  Future<void> _saveAttendance() async {
+    if (_id != null && _image != null) {
+      await AttendanceController.saveCheckIn(
+        context,
+        id: _id!,
+        checkIn: TimeOfDay.now(),
+        longitude: _currentLocation!.longitude,
+        latitude: _currentLocation!.latitude,
+        locationAddress: _currentAddress,
+        photo: _image,
+      );
+    } else {
+      throw "Image or Id is not available.";
+    }
   }
 
   Future<void> _initializeLocation() async {
@@ -70,8 +91,7 @@ class _PresensiState extends State<Presensi> {
       );
       Placemark place = placemarks.first;
       setState(() {
-        _currentAddress =
-            '${place.street}, ${place.subLocality}, ${place.locality}, ${place.country}';
+        _currentAddress = '${place.street}, ${place.subLocality}, ${place.locality}, ${place.country}';
       });
     } catch (e) {
       print("Error getting address: $e");
@@ -88,13 +108,23 @@ class _PresensiState extends State<Presensi> {
     setState(() {
       _isAtTargetLocation = distance <= Constant.allowedDistance;
     });
-  }
-
-  String _getFormattedDate() {
-    DateTime now = DateTime.now();
-    String day = DateFormat('EEEE', 'id_ID').format(now);
-    String formattedDate = DateFormat('dd-MM-yyyy').format(now);
-    return '$day, $formattedDate';
+    
+    print(_isAtTargetLocation
+        ? "You are within the allowed distance from the target location."
+        : "You are outside the allowed distance from the target location.");
+    
+    // if (!_isAtTargetLocation) {
+    //   QuickAlert.show(
+    //     context: context,
+    //     type: QuickAlertType.info,
+    //     title: 'Info!',
+    //     text: 'You are outside the allowed distance from the target location.',
+    //     onConfirmBtnTap: () {
+    //       Navigator.of(context).pop();
+    //       Get.toNamed('/menu-nav');
+    //     },
+    //   );
+    // }
   }
 
   @override
@@ -115,7 +145,6 @@ class _PresensiState extends State<Presensi> {
                       height: 250,
                       width: 200,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey, width: 2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: _image == null
@@ -136,7 +165,7 @@ class _PresensiState extends State<Presensi> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      _getFormattedDate(),
+                      DateFormat('dd-MM-yyyy').format(DateTime.now()),
                       style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -184,18 +213,11 @@ class _PresensiState extends State<Presensi> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 30),
-                    Text(
-                      _isAtTargetLocation
-                          ? "You are within the allowed distance from the target location."
-                          : "You are outside the allowed distance from the target location.",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        color: _isAtTargetLocation ? Colors.green : Colors.red,
-                      ),
-                    ),
                     const SizedBox(height: 20),
-                    MyButton(text: "Simpan Presensi", onPressed: () {}),
+                    MyButton(
+                      text: "Simpan Presensi",
+                      onPressed: () => _saveAttendance(),
+                    ),
                   ],
                 ),
               ),
