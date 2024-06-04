@@ -8,7 +8,6 @@ import 'package:patrol_track_mobile/core/utils/constant.dart';
 import 'package:quickalert/quickalert.dart';
 
 class AttendanceController {
-  
   static Future<List<Attendance>> getAttendanceHistory(
       BuildContext context) async {
     try {
@@ -22,30 +21,17 @@ class AttendanceController {
         throw Exception('Please login first.');
       }
     } catch (error) {
-      throw Exception(
-          'Failed to fetch attendance history: ${error.toString()}');
+      throw 'Failed to fetch attendance history: ${error.toString()}';
     }
   }
 
-  static Future<Attendance> getToday(BuildContext context) async {
-    try {
-      String? token = await Constant.getToken();
-
-      if (token != null) {
-        Attendance attendances = await AttendanceService.getToday(token);
-        return attendances;
-      } else {
-        throw Exception('Please login first.');
-      }
-    } catch (error) {
-      print('Failed to fetch attendance today: ${error.toString()}');
-      throw 'Failed to fetch attendance today: ${error.toString()}';
-    }
-  }
-
-  static Future<void> saveCheckIn(BuildContext context, {required int id,
-      required TimeOfDay checkIn, required double longitude,
-      required double latitude, required String locationAddress, File? photo}) async {
+  static Future<void> saveCheckIn(BuildContext context,
+      {required int id,
+      required TimeOfDay checkIn,
+      required double longitude,
+      required double latitude,
+      required String locationAddress,
+      File? photo}) async {
     try {
       await AttendanceService.postCheckIn(
         id: id,
@@ -65,6 +51,32 @@ class AttendanceController {
           Get.toNamed('/menu-nav');
         },
       );
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$error'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      print('Error: $error');
+    }
+  }
+
+  static Future<void> saveCheckOut(BuildContext context,
+      {required int id, required TimeOfDay checkOut}) async {
+    try {
+      await AttendanceService.postCheckOut(
+        id: id,
+        checkOut: checkOut,
+      );
+      QuickAlert.show(
+        context: context,
+        type: QuickAlertType.success,
+        title: 'Success!',
+        text: 'Checked out successfully.',
+      );
+      await Future.delayed(Duration(seconds: 2));
+      Navigator.of(context).pop();
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

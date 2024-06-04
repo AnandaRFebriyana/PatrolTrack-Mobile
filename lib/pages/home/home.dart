@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -14,6 +15,7 @@ import 'package:patrol_track_mobile/core/controllers/attendance_controller.dart'
 import 'package:patrol_track_mobile/core/controllers/report_controller.dart';
 import 'package:patrol_track_mobile/core/models/attendance.dart';
 import 'package:patrol_track_mobile/core/models/user.dart';
+import 'package:patrol_track_mobile/core/services/attendance_service.dart';
 import 'package:patrol_track_mobile/core/services/auth_service.dart';
 
 class Home extends StatefulWidget {
@@ -23,8 +25,12 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   late User user = User(name: '', email: '');
+  late Attendance attendance = Attendance(
+      id: 1,
+      date: DateTime(2024),
+      startTime: const TimeOfDay(hour: 00, minute: 00),
+      endTime: const TimeOfDay(hour: 00, minute: 00));
   DateTime today = DateTime.now();
-  late Future<Attendance> _todayAttendanceFuture;
   late Future<bool> _todayReportFuture;
   late Future<List<Attendance>> _attendanceFuture;
 
@@ -32,7 +38,7 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     fetchUser();
-    _todayAttendanceFuture = AttendanceController.getToday(context);
+    fetchToday();
     _todayReportFuture = ReportController.checkTodayReport(context);
     _attendanceFuture = AttendanceController.getAttendanceHistory(context);
   }
@@ -45,6 +51,32 @@ class _HomeState extends State<Home> {
       });
     } catch (e) {
       print('Error: $e');
+    }
+  }
+
+  Future<void> fetchToday() async {
+    try {
+      Attendance getToday = await AttendanceService.getToday();
+      setState(() {
+        attendance = getToday;
+      });
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  Future<void> _saveCheckOut() async {
+    try {
+      int id = attendance.id;
+      await AttendanceController.saveCheckOut(
+        context,
+        id: id,
+        checkOut: TimeOfDay.now(),
+      );
+      print("Attendance ID: $id");
+      print('Checked out successfully.');
+    } catch (error) {
+      print('Failed to check out: $error');
     }
   }
 
@@ -82,7 +114,7 @@ class _HomeState extends State<Home> {
         image = await compressImage(image);
         print('Compressed Photo Size: ${image.lengthSync()} bytes');
       }
-      final attendance = await _todayAttendanceFuture;
+      final attendance = await AttendanceService.getToday();
       int id = attendance.id;
       print("Attendance ID: $id");
 
@@ -125,33 +157,22 @@ class _HomeState extends State<Home> {
                   ],
                 ),
               ),
-              FutureBuilder<Attendance>(
-                future: _todayAttendanceFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox();
-                  } else if (snapshot.hasError) {
-                    return const SizedBox();
-                  } else {
-                    if (snapshot.data!.isNull) {
-                      return const SizedBox();
-                    } else {
-                      final attendance = snapshot.data!;
-                      final start = attendance.checkIn != null ? attendance.checkIn! : attendance.startTime;
-                      final end = attendance.checkOut != null ? attendance.checkOut! : attendance.endTime;
-                      final statusIn = attendance.checkIn != null ? "Done" : "Go to Work";
-                      final statusOut = attendance.checkOut != null ? "Done" : "Go Home";
-
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          twoCard("Check In", _formatTime(start), statusIn, FontAwesomeIcons.signIn),
-                          twoCard("Check Out", _formatTime(end), statusOut, FontAwesomeIcons.signOut)
-                        ],
-                      );
-                    }
-                  }
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  twoCard(
+                      () => _pickImage(context),
+                      "Check In",
+                      _formatTime(attendance.checkIn ?? attendance.startTime),
+                      attendance.checkIn != null ? "Done" : "Go to Work",
+                      FontAwesomeIcons.signIn),
+                  twoCard(
+                      () => _saveCheckOut(),
+                      "Check Out",
+                      _formatTime(attendance.checkOut ?? attendance.endTime),
+                      attendance.checkOut != null ? "Done" : "Go Home",
+                      FontAwesomeIcons.signOut)
+                ],
               ),
               FutureBuilder<bool>(
                 future: _todayReportFuture,
@@ -326,10 +347,9 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget twoCard(String title, String time, String subtitle, IconData icon) {
+  Widget twoCard(Function() onTap, String title, String time, String subtitle, IconData icon) {
     return GestureDetector(
-      // onTap: () => Get.toNamed('/presensi'),
-      onTap: () => _pickImage(context),
+      onTap: onTap,
       child: Container(
         width: 165,
         height: 134,

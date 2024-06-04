@@ -7,7 +7,6 @@ import 'package:patrol_track_mobile/core/models/attendance.dart';
 import 'package:patrol_track_mobile/core/utils/Constant.dart';
 
 class AttendanceService {
-  
   static Future<List<Attendance>> getAllAttendances(String token) async {
     final url = Uri.parse('${Constant.BASE_URL}/history-presence');
     final response = await http.get(
@@ -27,7 +26,8 @@ class AttendanceService {
     }
   }
 
-  static Future<Attendance> getToday(String token) async {
+  static Future<Attendance> getToday() async {
+    String? token = await Constant.getToken();
     final url = Uri.parse('${Constant.BASE_URL}/today-presence');
     final response = await http.get(
       url,
@@ -38,7 +38,7 @@ class AttendanceService {
       final result = jsonDecode(response.body);
       return Attendance.fromJson(result['data']);
     } else {
-      throw 'Failed to load attendance data';
+      throw 'Failed to load attendance data. Status code: ${response.statusCode}';
     }
   }
 
@@ -81,6 +81,26 @@ class AttendanceService {
     } catch (e) {
       print('Error: $e');
       throw Exception('Failed to make a presence: $e');
+    }
+  }
+
+  static Future<void> postCheckOut({required int id, required TimeOfDay checkOut}) async {
+    String? token = await Constant.getToken();
+
+    final url = Uri.parse('${Constant.BASE_URL}/check-out/$id');
+    final request = http.MultipartRequest('POST', url);
+
+    request.headers['Authorization'] = '$token';
+    request.headers['Accept'] = 'application/json';
+
+    request.fields['check_out_time'] = _formatTimeOfDay(checkOut);
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      print('Succsessfully check out.');
+    } else {
+      throw 'Failed to make a presence. Status code: ${response.statusCode}';
     }
   }
 
