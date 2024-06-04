@@ -192,7 +192,6 @@ class _PermissionPageState extends State<PermissionPage> {
                   reason: reason.text,
                   information: _imageFile,
                 );
-
                 PermissionController.createPermission(context, permission);
               },
             ),

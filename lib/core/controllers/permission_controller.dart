@@ -1,3 +1,4 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:patrol_track_mobile/core/models/permission.dart';
@@ -15,7 +16,7 @@ class PermissionController {
         bool success = await PermissionService.postPermission(token, permission);
         if (success) {
           QuickAlert.show(
-            context: context, 
+            context: context,
             type: QuickAlertType.success,
             title: 'Success!',
             text: 'Permission created successfully',
@@ -28,12 +29,35 @@ class PermissionController {
         }
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$error'),
-          backgroundColor: Colors.red,
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('$error'),
+      //     backgroundColor: Colors.red,
+      //   ),
+      // );
+      // print('Error: $error');
+
+      final overlay = Overlay.of(context);
+      final overlayEntry = OverlayEntry(
+        builder: (context) => Positioned(
+          top: MediaQuery.of(context).padding.top + 10,
+          left: 10,
+          right: 10,
+          child: Material(
+            color: Colors.transparent,
+            child: AwesomeSnackbarContent(
+              title: 'Error',
+              message: '$error',
+              contentType: ContentType.failure,
+            ),
+          ),
         ),
       );
+
+      overlay.insert(overlayEntry);
+      Future.delayed(Duration(seconds: 3), () {
+        overlayEntry.remove();
+      });
       print('Error: $error');
     }
   }
