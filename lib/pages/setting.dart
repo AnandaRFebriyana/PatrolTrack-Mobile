@@ -6,7 +6,6 @@ import 'package:patrol_track_mobile/components/header.dart';
 import 'package:patrol_track_mobile/core/controllers/auth_controller.dart';
 import 'package:patrol_track_mobile/core/models/user.dart';
 import 'package:patrol_track_mobile/core/services/auth_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Setting extends StatefulWidget {
   @override
@@ -51,7 +50,7 @@ class _SettingState extends State<Setting> {
   Widget _buildSetting(BuildContext context) {
     final TextEditingController name = TextEditingController(text: user.name);
     final TextEditingController email = TextEditingController(text: user.email);
-    final TextEditingController birthDate = TextEditingController(text: user.birthDate != null ? DateFormat('dd MMMM yyyy').format(DateTime.parse(user.birthDate!)) : '',);
+    final TextEditingController birthDate = TextEditingController(text: user.birthDate != null ? DateFormat('dd MMMM yyyy').format(DateTime.parse(user.birthDate!)) : '');
     final TextEditingController address = TextEditingController(text: user.address ?? '');
     final TextEditingController phoneNumber = TextEditingController(text: user.phoneNumber ?? '');
 
@@ -68,7 +67,7 @@ class _SettingState extends State<Setting> {
             ),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(20),
@@ -87,29 +86,7 @@ class _SettingState extends State<Setting> {
               MyButton(
                 text: "Logout",
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text("Konfirmasi Logout"),
-                        content: Text("Apakah Anda yakin ingin keluar?"),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: Text("Tidak"),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              await AuthController.logout(context, await SharedPreferences.getInstance());
-                            },
-                            child: Text("Ya"),
-                          ),
-                        ],
-                      );
-                    },
-                  );
+                  AuthController.logout(context);
                 },
               ),
             ],
@@ -123,7 +100,7 @@ class _SettingState extends State<Setting> {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF2F2F3),
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
@@ -132,7 +109,7 @@ class _SettingState extends State<Setting> {
             child: Icon(
               icon,
               color: Colors.grey,
-              size: 20.0,
+              size: 20,
             ),
           ),
           Expanded(

@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:patrol_track_mobile/components/alert_quick.dart';
 import 'package:patrol_track_mobile/core/models/user.dart';
 import 'package:patrol_track_mobile/core/services/auth_service.dart';
 import 'package:patrol_track_mobile/core/utils/constant.dart';
 import 'package:quickalert/quickalert.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthController {
-
+  
   static Future<void> login(BuildContext context, TextEditingController email, TextEditingController password) async {
     try {
       User? user = await AuthService.login(email.text, password.text);
@@ -27,33 +27,22 @@ class AuthController {
     }
   }
 
-  static Future<void> logout(BuildContext context, SharedPreferences prefs) async {
+  static Future<void> logout(BuildContext context) async {
     try {
-      await AuthService.logout(prefs);
-      Get.offAllNamed('/login');
+      MyQuickAlert.confirm(
+        context,
+        'Do you want to logout',
+        onConfirmBtnTap: () async {
+          await AuthService.logout();
+          Get.offAllNamed('/login');
+        },
+        onCancelBtnTap: () {
+          Navigator.of(context).pop();
+        },
+      );
     } catch (error) {
       print(error.toString());
-      QuickAlert.show(
-        context: context,
-        type: QuickAlertType.error,
-        title: 'Error!',
-        text: error.toString(),
-      );
+      MyQuickAlert.error(context, error.toString());
     }
   }
-
-  // static Future<User> fetchUser(BuildContext context) async {
-  //   try {
-  //     String? token = await Constant.getToken();
-
-  //     if (token != null) {
-  //       final user = await AuthService.getUser(token);
-  //       return user;
-  //     } else {
-  //       throw Exception('Please login first.');
-  //     }
-  //   } catch (e) {
-  //     throw e;
-  //   }
-  // }
 }

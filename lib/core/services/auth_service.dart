@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:patrol_track_mobile/core/models/user.dart';
 import 'package:patrol_track_mobile/core/utils/Constant.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   static Future<User?> login(String email, String password) async {
@@ -22,17 +21,21 @@ class AuthService {
     }
   }
 
-  static Future<void> logout(SharedPreferences prefs) async {
+  static Future<void> logout() async {
     final url = Uri.parse('${Constant.BASE_URL}/logout');
-    final token = prefs.getString('token');
-    if (token != null) {
-      await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': '$token',
-        },
-      );
+    String? token = await Constant.getToken();
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': '$token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print('Successfully logged out');
+    } else {
+      print('Failed logout: ${response.reasonPhrase}');
     }
   }
 
@@ -50,18 +53,4 @@ class AuthService {
       throw Exception('Failed to load user data');
     }
   }
-
-  // static Future<User> getUser(String token) async {
-  //   final url = Uri.parse('${Constant.BASE_URL}/get-user');
-  //   final response = await http.get(
-  //     url,
-  //     headers: {'Authorization': '$token'},
-  //   );
-  //   if (response.statusCode == 200) {
-  //     final result = jsonDecode(response.body);
-  //     return User.fromJson(result['data']);
-  //   } else {
-  //     throw Exception('Failed to load user data');
-  //   }
-  // }
 }
