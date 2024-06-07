@@ -7,6 +7,7 @@ import 'package:patrol_track_mobile/core/models/attendance.dart';
 import 'package:patrol_track_mobile/core/utils/Constant.dart';
 
 class AttendanceService {
+  
   static Future<List<Attendance>> getAllAttendances(String token) async {
     final url = Uri.parse('${Constant.BASE_URL}/history-presence');
     final response = await http.get(
@@ -22,11 +23,11 @@ class AttendanceService {
       );
       return attendances;
     } else {
-      throw Exception('Failed to load attendances');
+      throw 'Failed to load attendances. Status code: ${response.statusCode}';
     }
   }
 
-  static Future<Attendance> getToday() async {
+  static Future<Attendance?> getToday() async {
     String? token = await Constant.getToken();
     final url = Uri.parse('${Constant.BASE_URL}/today-presence');
     final response = await http.get(
@@ -37,8 +38,10 @@ class AttendanceService {
     if (response.statusCode == 200) {
       final result = jsonDecode(response.body);
       return Attendance.fromJson(result['data']);
+    } else if (response.statusCode == 404) {
+      return null;
     } else {
-      throw 'Failed to load attendance data. Status code: ${response.statusCode}';
+      throw 'Failed to load attendance today. Status code: ${response.statusCode}';
     }
   }
 
@@ -68,8 +71,7 @@ class AttendanceService {
           await http.MultipartFile.fromPath('photo', photo.path),
         );
       }
-
-      print('Request Fields: ${request.fields}');
+      // print('Request Fields: ${request.fields}');
       final response = await request.send();
       final responseBody = await http.Response.fromStream(response);
 

@@ -2,20 +2,21 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:patrol_track_mobile/components/alert_quick.dart';
+import 'package:patrol_track_mobile/components/snackbar.dart';
 import 'package:patrol_track_mobile/core/models/attendance.dart';
 import 'package:patrol_track_mobile/core/services/attendance_service.dart';
 import 'package:patrol_track_mobile/core/utils/constant.dart';
-import 'package:quickalert/quickalert.dart';
 
 class AttendanceController {
+  
   static Future<List<Attendance>> getAttendanceHistory(
       BuildContext context) async {
     try {
       String? token = await Constant.getToken();
 
       if (token != null) {
-        List<Attendance> attendances =
-            await AttendanceService.getAllAttendances(token);
+        List<Attendance> attendances = await AttendanceService.getAllAttendances(token);
         return attendances;
       } else {
         throw Exception('Please login first.');
@@ -41,11 +42,7 @@ class AttendanceController {
         locationAddress: locationAddress,
         photo: photo,
       );
-      QuickAlert.show(
-        context: context,
-        type: QuickAlertType.success,
-        title: 'Success!',
-        text: 'Attendance saved successfully',
+      MyQuickAlert.success(context, 'Attendance saved successfully',
         onConfirmBtnTap: () {
           Navigator.of(context).pop();
           Get.toNamed('/menu-nav');
@@ -69,21 +66,11 @@ class AttendanceController {
         id: id,
         checkOut: checkOut,
       );
-      QuickAlert.show(
-        context: context,
-        type: QuickAlertType.success,
-        title: 'Success!',
-        text: 'Checked out successfully.',
-      );
+      MyQuickAlert.success(context, 'Checked out successfully.');
       await Future.delayed(Duration(seconds: 2));
       Navigator.of(context).pop();
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$error'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      MySnackbar.failure(context, '$error');
       print('Error: $error');
     }
   }

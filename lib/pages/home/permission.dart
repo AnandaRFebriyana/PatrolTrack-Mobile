@@ -99,7 +99,7 @@ class _PermissionPageState extends State<PermissionPage> {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -110,7 +110,7 @@ class _PermissionPageState extends State<PermissionPage> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: reason,
                 decoration: const InputDecoration(
@@ -120,7 +120,7 @@ class _PermissionPageState extends State<PermissionPage> {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Column(
             children: [
               Text(
@@ -132,7 +132,7 @@ class _PermissionPageState extends State<PermissionPage> {
               ),
             ],
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           InkWell(
             onTap: _pickImage,
             child: Container(
@@ -156,7 +156,7 @@ class _PermissionPageState extends State<PermissionPage> {
               ),
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           _imageFile != null
               ? Stack(
                   children: [
@@ -183,7 +183,7 @@ class _PermissionPageState extends State<PermissionPage> {
                   ],
                 )
               : SizedBox(),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           MyButton(
               text: "Kirim",
               onPressed: () {

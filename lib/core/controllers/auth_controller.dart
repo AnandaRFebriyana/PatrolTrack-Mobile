@@ -4,10 +4,9 @@ import 'package:patrol_track_mobile/components/alert_quick.dart';
 import 'package:patrol_track_mobile/core/models/user.dart';
 import 'package:patrol_track_mobile/core/services/auth_service.dart';
 import 'package:patrol_track_mobile/core/utils/constant.dart';
-import 'package:quickalert/quickalert.dart';
 
 class AuthController {
-  
+
   static Future<void> login(BuildContext context, TextEditingController email, TextEditingController password) async {
     try {
       User? user = await AuthService.login(email.text, password.text);
@@ -18,12 +17,7 @@ class AuthController {
       }
     } catch (error) {
       print(error.toString());
-      QuickAlert.show(
-        context: context,
-        type: QuickAlertType.error,
-        title: 'Error!',
-        text: error.toString(),
-      );
+      MyQuickAlert.error(context, error.toString());
     }
   }
 

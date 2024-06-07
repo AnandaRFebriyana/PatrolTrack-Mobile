@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:patrol_track_mobile/components/history_card.dart';
+import 'package:patrol_track_mobile/components/alert_quick.dart';
 import 'package:patrol_track_mobile/core/controllers/attendance_controller.dart';
 import 'package:patrol_track_mobile/core/controllers/report_controller.dart';
 import 'package:patrol_track_mobile/core/models/attendance.dart';
@@ -55,26 +56,35 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> fetchToday() async {
-    try {
-      Attendance getToday = await AttendanceService.getToday();
+  try {
+    Attendance? getToday = await AttendanceService.getToday();
+    if (getToday != null) {
       setState(() {
         attendance = getToday;
       });
-    } catch (e) {
-      print('Error: $e');
+    } else {
+      print('Data presensi tidak tersedia.');
     }
+  } catch (e) {
+    print('Error: $e');
   }
+}
 
   Future<void> _saveCheckOut() async {
     try {
+      final attendance = await AttendanceService.getToday();
+
+      if (attendance == null) {
+        MyQuickAlert.info(context, 'Presensi belum tersedia!');
+        return;
+      }
       int id = attendance.id;
       await AttendanceController.saveCheckOut(
         context,
         id: id,
         checkOut: TimeOfDay.now(),
       );
-      print("Attendance ID: $id");
-      print('Checked out successfully.');
+      print("Attendance ID: $id || Checked out successfully.");
     } catch (error) {
       print('Failed to check out: $error');
     }
@@ -103,6 +113,17 @@ class _HomeState extends State<Home> {
   }
 
   void _pickImage(BuildContext context) async {
+    final attendance = await AttendanceService.getToday();
+
+    if (attendance == null) {
+      MyQuickAlert.info(context, 'Presensi belum tersedia!');
+      return;
+    }
+
+    if (attendance.checkIn != null) {
+      MyQuickAlert.info(context, 'Anda sudah melakukan presensi!');
+      return;
+    }
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
@@ -114,7 +135,6 @@ class _HomeState extends State<Home> {
         image = await compressImage(image);
         print('Compressed Photo Size: ${image.lengthSync()} bytes');
       }
-      final attendance = await AttendanceService.getToday();
       int id = attendance.id;
       print("Attendance ID: $id");
 
@@ -161,17 +181,21 @@ class _HomeState extends State<Home> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   twoCard(
-                      () => _pickImage(context),
-                      "Check In",
-                      _formatTime(attendance.checkIn ?? attendance.startTime),
-                      attendance.checkIn != null ? "Done" : "Go to Work",
-                      FontAwesomeIcons.signIn),
+                    () => _pickImage(context),
+                    "Check In",
+                    _formatTime(attendance.checkIn ?? attendance.startTime),
+                    attendance.checkIn != null ? "Done" : "Go to Work",
+                    attendance.checkIn != null ? Colors.green : Colors.black,
+                    FontAwesomeIcons.signIn,
+                  ),
                   twoCard(
-                      () => _saveCheckOut(),
-                      "Check Out",
-                      _formatTime(attendance.checkOut ?? attendance.endTime),
-                      attendance.checkOut != null ? "Done" : "Go Home",
-                      FontAwesomeIcons.signOut)
+                    () => _saveCheckOut(),
+                    "Check Out",
+                    _formatTime(attendance.checkOut ?? attendance.endTime),
+                    attendance.checkOut != null ? "Done" : "Go Home",
+                    attendance.checkOut != null ? Colors.green : Colors.black,
+                    FontAwesomeIcons.signOut,
+                  ),
                 ],
               ),
               FutureBuilder<bool>(
@@ -347,7 +371,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget twoCard(Function() onTap, String title, String time, String subtitle, IconData icon) {
+  Widget twoCard(Function() onTap, String title, String time, String subtitle, Color textColor, IconData icon) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -397,11 +421,15 @@ class _HomeState extends State<Home> {
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: GoogleFonts.poppins(fontSize: 12),
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: textColor,
+                    ),
                   ),
                 ],
               ),
