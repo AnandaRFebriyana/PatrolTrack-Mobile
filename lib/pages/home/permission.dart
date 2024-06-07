@@ -18,6 +18,10 @@ class _PermissionPageState extends State<PermissionPage> {
   final TextEditingController reason = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   File? _imageFile;
+  bool _dateNotSelected = false;
+  bool _reasonNotEntered = false;
+  bool _imageNotSelected = false;
+
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -29,6 +33,7 @@ class _PermissionPageState extends State<PermissionPage> {
     if (picked != null) {
       setState(() {
         date.text = DateFormat('yyyy-MM-dd').format(picked);
+        _dateNotSelected = false;
       });
     }
   }
@@ -38,6 +43,7 @@ class _PermissionPageState extends State<PermissionPage> {
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
+        _imageNotSelected = false;
       });
     }
   }
@@ -88,14 +94,15 @@ class _PermissionPageState extends State<PermissionPage> {
               TextFormField(
                 controller: date,
                 readOnly: true,
+                onTap: () => _selectDate(context),
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   suffixIcon: GestureDetector(
                     onTap: () => _selectDate(context),
                     child: const Icon(Icons.calendar_month_outlined),
                   ),
+                  errorText: _dateNotSelected? 'Please select a date':null,
                 ),
-                onTap: () => _selectDate(context),
               ),
             ],
           ),
@@ -117,6 +124,16 @@ class _PermissionPageState extends State<PermissionPage> {
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 2,
+                onChanged: (_) {
+                  setState(() {
+                    _reasonNotEntered = false;
+                  });
+                },
+              ),
+              if (_reasonNotEntered)
+              Text(
+                'Please enter a reason',
+                style: TextStyle(color: Colors.red),
               ),
             ],
           ),
@@ -156,6 +173,11 @@ class _PermissionPageState extends State<PermissionPage> {
               ),
             ),
           ),
+          if (_imageNotSelected)
+          Text(
+            'Please select an image',
+            style: TextStyle(color: Colors.red),
+          ),
           const SizedBox(height: 10),
           _imageFile != null
               ? Stack(
@@ -184,17 +206,35 @@ class _PermissionPageState extends State<PermissionPage> {
                 )
               : SizedBox(),
           const SizedBox(height: 20),
+          // MyButton(
+          //     text: "Kirim",
+          //     onPressed: () {
+          //       Permission permission = Permission(
+          //         permissionDate: date.text,
+          //         reason: reason.text,
+          //         information: _imageFile,
+          //       );
+          //       PermissionController.createPermission(context, permission);
+          //     },
+          //   ),
           MyButton(
-              text: "Kirim",
-              onPressed: () {
+            text: "Kirim",
+            onPressed: () {
+              setState(() {
+                _dateNotSelected = date.text.isEmpty;
+                _reasonNotEntered = reason.text.isEmpty;
+                _imageNotSelected = _imageFile == null;
+              });
+              if (!_dateNotSelected && !_reasonNotEntered && !_imageNotSelected) {
                 Permission permission = Permission(
                   permissionDate: date.text,
                   reason: reason.text,
                   information: _imageFile,
                 );
                 PermissionController.createPermission(context, permission);
-              },
-            ),
+              }
+            },
+          ),
         ],
       ),
     );
