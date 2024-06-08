@@ -66,18 +66,18 @@ class _LoginState extends State<Login> {
                 ],
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () => Get.toNamed('/forgot-pass'),
-                  child: Text(
-                    "Forgot Password?",
-                    style: GoogleFonts.poppins(color: Colors.grey),
-                  ),
-                ),
-              ],
-            ),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.end,
+            //   children: <Widget>[
+            //     GestureDetector(
+            //       onTap: () => Get.toNamed('/forgot-pass'),
+            //       child: Text(
+            //         "Forgot Password?",
+            //         style: GoogleFonts.poppins(color: Colors.grey),
+            //       ),
+            //     ),
+            //   ],
+            // ),
             SizedBox(height: 20),
             MyButton(
               text: "Login",

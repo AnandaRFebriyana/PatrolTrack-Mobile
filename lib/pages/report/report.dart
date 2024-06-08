@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:patrol_track_mobile/components/button.dart';
 import 'package:patrol_track_mobile/components/header.dart';
 
 class ReportPage extends StatefulWidget {
@@ -23,6 +24,11 @@ class _ReportPageState extends State<ReportPage> {
   late String _currentTime;
   final ImagePicker _picker = ImagePicker();
   List<XFile> _imageFiles = [];
+  bool _resultNotSelected = false;
+  bool _notesNotSelected = false;
+  bool _imageReportNotSelected = false;
+  // bool _statusNotSlected = false;
+
 
   @override
   void initState() {
@@ -40,10 +46,11 @@ class _ReportPageState extends State<ReportPage> {
   }
 
   void _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
       setState(() {
         _imageFiles.add(pickedFile);
+        _imageReportNotSelected = false;
       });
     }
   }
@@ -55,8 +62,12 @@ class _ReportPageState extends State<ReportPage> {
   }
 
   void _submitFormPatroli() async {
-    if (_imageFiles.isEmpty) {
-      // Handle if no image is selected
+    setState(() {
+      _notesNotSelected =_notesController.text.isEmpty;
+      _imageReportNotSelected = _imageFiles.isEmpty;
+      // _statusNotSlected = _status == null || _status!.isEmpty;
+    });
+    if (_notesNotSelected || _imageReportNotSelected ) {
       return;
     }
 
@@ -75,7 +86,11 @@ class _ReportPageState extends State<ReportPage> {
     if (response.statusCode == 201) {
       Get.toNamed('/menu-nav');
     } else {
-      // Handle error
+     ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit the report. Please try again.'),
+        ),
+      ); 
     }
   }
 
@@ -177,7 +192,18 @@ class _ReportPageState extends State<ReportPage> {
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                       ),
+                      onChanged: (_){
+                        setState(() {
+                          _notesNotSelected = false;
+                        });
+                      },
                     ),
+                    if (_notesNotSelected)
+                    Text(
+                      'Please enter a reason',
+                    style: TextStyle(color: Colors.red),
+                    ),
+
                     SizedBox(height: 20),
                     Text(
                       "Unggah Bukti",
@@ -186,7 +212,7 @@ class _ReportPageState extends State<ReportPage> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     InkWell(
                       onTap: _pickImage,
                       child: Container(
@@ -210,7 +236,12 @@ class _ReportPageState extends State<ReportPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
+                     if (_imageReportNotSelected)
+                      Text(
+                        'Please select an image',
+                        style: TextStyle(color: Colors.red),
+                    ),
+                    const SizedBox(height: 10),
                     Wrap(
                       spacing: 10,
                       runSpacing: 10,
@@ -243,27 +274,31 @@ class _ReportPageState extends State<ReportPage> {
                       }).toList(),
                     ),
                     SizedBox(height: 30),
-                    Container(
-                      margin: EdgeInsets.symmetric(horizontal: 50),
-                      child: ElevatedButton(
-                        onPressed: _submitFormPatroli,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF305E8B),
-                          minimumSize: Size(double.infinity, 50),
-                          padding: EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(
-                          "Kirim",
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    MyButton(
+                      text: "Kirim",
+                      onPressed: _submitFormPatroli,
                     ),
+                    // Container(
+                    //   margin: EdgeInsets.symmetric(horizontal: 50),
+                    //   child: ElevatedButton(
+                    //     onPressed: _submitFormPatroli,
+                    //     style: ElevatedButton.styleFrom(
+                    //       backgroundColor: Color(0xFF305E8B),
+                    //       minimumSize: Size(double.infinity, 50),
+                    //       padding: EdgeInsets.symmetric(vertical: 15),
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(10),
+                    //       ),
+                    //     ),
+                        // child: Text(
+                        //   "Kirim",
+                        //   style: GoogleFonts.poppins(
+                        //     color: Colors.white,
+                        //     fontWeight: FontWeight.bold,
+                        //   ),
+                        // ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
