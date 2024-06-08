@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:patrol_track_mobile/components/alert_quick.dart';
 import 'package:patrol_track_mobile/core/models/report.dart';
 import 'package:patrol_track_mobile/core/services/report_service.dart';
 import 'package:patrol_track_mobile/core/utils/constant.dart';
@@ -34,6 +36,21 @@ class ReportController {
     } catch (e) {
       print('Error while fetching reports: $e');
       return [];
+    }
+  }
+  static Future<void> createReport(BuildContext context, Report report) async {
+    try {
+      await ReportService.postReport(report);
+      MyQuickAlert.success(
+        context,
+        'Report created successfully',
+        onConfirmBtnTap: () {
+          Navigator.of(context).pop();
+          Get.toNamed('/menu-nav');
+        },
+      );
+    } catch (e) {
+      print('Error $e');
     }
   }
 }

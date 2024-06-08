@@ -101,8 +101,13 @@ class _PermissionPageState extends State<PermissionPage> {
                     onTap: () => _selectDate(context),
                     child: const Icon(Icons.calendar_month_outlined),
                   ),
-                  errorText: _dateNotSelected? 'Please select a date':null,
+                  // errorText: _dateNotSelected? 'Please select a date':null,
                 ),
+              ),
+              if (_dateNotSelected)
+              Text(
+                'Please select a date',
+                style: TextStyle(color: Colors.red),
               ),
             ],
           ),

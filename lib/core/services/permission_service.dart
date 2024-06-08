@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import 'package:patrol_track_mobile/core/models/permission.dart';
 import 'package:patrol_track_mobile/core/utils/constant.dart';
 
@@ -16,9 +18,19 @@ class PermissionService {
       request.fields['permission_date'] = permission.permissionDate;
       request.fields['reason'] = permission.reason;
 
+      // if (permission.information != null) {
+      //   request.files.add(
+      //     await http.MultipartFile.fromPath('information', permission.information!.path),
+      //   );
+      // }
       if (permission.information != null) {
+        final mimeTypeData = lookupMimeType(permission.information!.path,
+            headerBytes: [0xFF, 0xD8])?.split('/');
         request.files.add(
-          await http.MultipartFile.fromPath('information', permission.information!.path),
+          await http.MultipartFile.fromPath(
+            'information', permission.information!.path,
+            contentType: mimeTypeData != null ? MediaType(mimeTypeData[0], mimeTypeData[1]) : null,
+          ),
         );
       }
       final response = await request.send();

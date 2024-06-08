@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:patrol_track_mobile/core/models/report.dart';
 import 'package:patrol_track_mobile/core/utils/Constant.dart';
@@ -38,6 +39,38 @@ class ReportService {
       return reports;
     } else {
       throw Exception('Failed to load reports');
+    }
+  }
+
+  static Future<void> postReport(Report report) async {
+    try {
+      String? token = await Constant.getToken();
+      final url = Uri.parse('${Constant.BASE_URL}/report/store');
+      final request = http.MultipartRequest('POST', url);
+
+      request.headers['Authorization'] = '$token';
+      request.headers['Accept'] = 'application/json';
+
+      request.fields['location_id'] = report.locationId.toString();
+      request.fields['status'] = report.status;
+      request.fields['description'] = report.description;
+      for (File _attachments in report.attachments) {
+        request.files.add(
+          await http.MultipartFile.fromPath('attachments[]', _attachments.path),
+        );
+      }
+
+      final response = await request.send();
+
+      if (response.statusCode == 201) {
+        print('Successfully create report.');
+      } else {
+        // throw 'Status Code: ${response.statusCode}';
+        String errorMessage = await response.stream.bytesToString();
+        throw 'Failed to create report: $errorMessage';
+      }
+    } catch (e) {
+      print('Error: $e');
     }
   }
 }

@@ -84,7 +84,7 @@ class _ScannerState extends State<Scanner> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ReportPage(scanData: barcode.code ?? 'No data found'),
+          builder: (context) => ReportPage(scanResult: barcode.code ?? 'No data found'),
         ),
       );
     });
