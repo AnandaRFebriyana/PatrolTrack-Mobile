@@ -9,9 +9,8 @@ import 'package:patrol_track_mobile/core/services/attendance_service.dart';
 import 'package:patrol_track_mobile/core/utils/constant.dart';
 
 class AttendanceController {
-  
-  static Future<List<Attendance>> getAttendanceHistory(
-      BuildContext context) async {
+
+  static Future<List<Attendance>> getAttendanceHistory(BuildContext context) async {
     try {
       String? token = await Constant.getToken();
 
@@ -67,8 +66,7 @@ class AttendanceController {
         checkOut: checkOut,
       );
       MyQuickAlert.success(context, 'Checked out successfully.');
-      await Future.delayed(Duration(seconds: 2));
-      Navigator.of(context).pop();
+      Get.toNamed('/menu-nav');
     } catch (error) {
       MySnackbar.failure(context, '$error');
       print('Error: $error');

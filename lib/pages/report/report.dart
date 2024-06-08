@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -12,10 +13,15 @@ import 'package:patrol_track_mobile/core/controllers/report_controller.dart';
 import 'package:patrol_track_mobile/core/models/report.dart';
 import 'package:patrol_track_mobile/components/button.dart';
 import 'package:patrol_track_mobile/components/header.dart';
+import 'package:patrol_track_mobile/components/snackbar.dart';
+import 'package:patrol_track_mobile/core/controllers/report_controller.dart';
+import 'package:patrol_track_mobile/core/models/report.dart';
 
 class ReportPage extends StatefulWidget {
   final String scanResult;
+  final String scanResult;
 
+  ReportPage({required this.scanResult});
   ReportPage({required this.scanResult});
 
   @override
@@ -23,6 +29,7 @@ class ReportPage extends StatefulWidget {
 }
 
 class _ReportPageState extends State<ReportPage> {
+  late TextEditingController _result;
   late TextEditingController _result;
   String _status = 'Aman';
   late String _currentTime;
@@ -32,7 +39,6 @@ class _ReportPageState extends State<ReportPage> {
   bool _notesNotSelected = false;
   bool _imageReportNotSelected = false;
   // bool _statusNotSlected = false;
-
 
   @override
   void initState() {
@@ -105,7 +111,17 @@ class _ReportPageState extends State<ReportPage> {
         fileSizeInBytes = attachment.lengthSync();
         print('Compressed Photo Size: $fileSizeInBytes bytes');
       }
+      File attachment = File(pickedFile.path);
+      int fileSizeInBytes = attachment.lengthSync();
+      print('Photo Size: $fileSizeInBytes bytes');
+
+      if (fileSizeInBytes > 2048 * 1024) {
+        attachment = await compressImage(attachment);
+        fileSizeInBytes = attachment.lengthSync();
+        print('Compressed Photo Size: $fileSizeInBytes bytes');
+      }
       setState(() {
+        _attachments.add(attachment);
         _attachments.add(attachment);
         _imageReportNotSelected = false;
       });
@@ -116,10 +132,14 @@ class _ReportPageState extends State<ReportPage> {
     setState(() {
       _attachments.removeAt(index);
     });
+      _attachments.removeAt(index);
+    });
   }
 
   @override
   void dispose() {
+    _result.dispose();
+    _desc.dispose();
     _result.dispose();
     _desc.dispose();
     super.dispose();
@@ -134,18 +154,22 @@ class _ReportPageState extends State<ReportPage> {
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Center(
-                        child: Text(
-                          _currentTime,
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                        ),
+                    Center(
+                      child: StreamBuilder<DateTime>(
+                        stream: Stream.periodic(
+                            const Duration(seconds: 1), (_) => DateTime.now()),
+                        builder: (context, snapshot) {
+                          return Text(
+                            DateFormat('dd-MM-yyyy HH:mm:ss')
+                                .format(DateTime.now()),
+                            style: GoogleFonts.poppins(
+                                fontSize: 15, fontWeight: FontWeight.bold),
+                          );
+                        },
                       ),
                     ),
                     Visibility(
@@ -216,26 +240,26 @@ class _ReportPageState extends State<ReportPage> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     TextField(
+                      controller: _desc,
                       controller: _desc,
                       maxLines: 4,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                       ),
-                      onChanged: (_){
+                      onChanged: (_) {
                         setState(() {
                           _notesNotSelected = false;
                         });
                       },
                     ),
                     if (_notesNotSelected)
-                    Text(
-                      'Please enter a reason',
-                    style: TextStyle(color: Colors.red),
-                    ),
-
-                    SizedBox(height: 20),
+                      Text(
+                        'Please enter a reason',
+                        style: GoogleFonts.poppins(color: Colors.red),
+                      ),
+                    const SizedBox(height: 20),
                     Text(
                       "Unggah Bukti",
                       style: GoogleFonts.poppins(
@@ -247,16 +271,17 @@ class _ReportPageState extends State<ReportPage> {
                     InkWell(
                       onTap: _pickImage,
                       child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 15, horizontal: 20),
                         decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xFF5F5C5C)),
+                          border: Border.all(color: Colors.grey),
                           borderRadius: BorderRadius.circular(5),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.camera_alt),
-                            SizedBox(width: 10),
+                            const Icon(Icons.camera_alt),
+                            const SizedBox(width: 10),
                             Text(
                               "Pilih File",
                               style: GoogleFonts.poppins(
@@ -267,15 +292,17 @@ class _ReportPageState extends State<ReportPage> {
                         ),
                       ),
                     ),
-                     if (_imageReportNotSelected)
+                    if (_imageReportNotSelected)
                       Text(
                         'Please select an image',
-                        style: TextStyle(color: Colors.red),
-                    ),
+                        style: GoogleFonts.poppins(color: Colors.red),
+                      ),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 10,
                       runSpacing: 10,
+                      children: _attachments.map((imageFile) {
+                        int index = _attachments.indexOf(imageFile);
                       children: _attachments.map((imageFile) {
                         int index = _attachments.indexOf(imageFile);
                         return Stack(
@@ -284,7 +311,8 @@ class _ReportPageState extends State<ReportPage> {
                               width: 100,
                               height: 100,
                               decoration: BoxDecoration(
-                                border: Border.all(color: Color(0xFF5F5C5C)),
+                                border:
+                                    Border.all(color: const Color(0xFF5F5C5C)),
                                 borderRadius: BorderRadius.circular(5.0),
                                 image: DecorationImage(
                                   image: FileImage(File(imageFile.path)),
@@ -296,7 +324,8 @@ class _ReportPageState extends State<ReportPage> {
                               bottom: -10,
                               left: 25,
                               child: IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _removeImage(index),
                               ),
                             ),
@@ -304,9 +333,11 @@ class _ReportPageState extends State<ReportPage> {
                         );
                       }).toList(),
                     ),
-                    SizedBox(height: 30),
+                    const SizedBox(height: 30),
                     MyButton(
                       text: "Kirim",
+                      onPressed: _saveReport,
+                    ),
                       onPressed: _saveReport,
                     ),
                   ],

@@ -1,10 +1,13 @@
 import 'dart:io';
 
+import 'dart:io';
+
 class Report {
   final int locationId;
   final String locationName;
   final String status;
   final String description;
+  final List<File> attachments;
   final List<File> attachments;
   final DateTime createdAt;
 
@@ -13,6 +16,7 @@ class Report {
     required this.locationName,
     required this.status,
     required this.description,
+    required this.attachments,
     required this.attachments,
     required this.createdAt,
   });

@@ -57,6 +57,7 @@ class ReportService {
       for (File _attachments in report.attachments) {
         request.files.add(
           await http.MultipartFile.fromPath('attachments[]', _attachments.path),
+
         );
       }
 
