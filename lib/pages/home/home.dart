@@ -56,26 +56,34 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> fetchToday() async {
-  try {
-    Attendance? getToday = await AttendanceService.getToday();
-    if (getToday != null) {
-      setState(() {
-        attendance = getToday;
-      });
-    } else {
-      print('Data presensi tidak tersedia.');
+    try {
+      Attendance? getToday = await AttendanceService.getToday();
+      if (getToday != null) {
+        setState(() {
+          attendance = getToday;
+        });
+      }
+    } catch (e) {
+      print('Error: $e');
     }
-  } catch (e) {
-    print('Error: $e');
   }
-}
 
   Future<void> _saveCheckOut() async {
     try {
       final attendance = await AttendanceService.getToday();
 
       if (attendance == null) {
-        MyQuickAlert.info(context, 'Presensi belum tersedia!');
+        MyQuickAlert.info(context, 'Presence is not yet available!');
+        return;
+      }
+
+      if (attendance.checkOut != attendance.endTime) {
+        MyQuickAlert.info(context, 'It\'s not time to go home yet!');
+        return;
+      }
+
+      if (attendance.checkOut != null) {
+        MyQuickAlert.info(context, 'You have made a presence!');
         return;
       }
       int id = attendance.id;
@@ -116,12 +124,12 @@ class _HomeState extends State<Home> {
     final attendance = await AttendanceService.getToday();
 
     if (attendance == null) {
-      MyQuickAlert.info(context, 'Presensi belum tersedia!');
+      MyQuickAlert.info(context, 'Presence is not yet available!');
       return;
     }
 
     if (attendance.checkIn != null) {
-      MyQuickAlert.info(context, 'Anda sudah melakukan presensi!');
+      MyQuickAlert.info(context, 'You have made a presence!');
       return;
     }
     final picker = ImagePicker();
@@ -442,7 +450,10 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildPatrolCard({String title = '', IconData icon = Icons.error, Color color = Colors.black}) {
+  Widget _buildPatrolCard(
+      {String title = '',
+      IconData icon = Icons.error,
+      Color color = Colors.black}) {
     return Card(
       margin: const EdgeInsets.all(20),
       child: Container(
