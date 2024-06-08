@@ -27,6 +27,10 @@ class _ReportPageState extends State<ReportPage> {
   final TextEditingController _desc = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   List<File> _attachments = [];
+  // bool _resultNotSelected = false;
+  bool _notesNotSelected = false;
+  bool _imageReportNotSelected = false;
+  // bool _statusNotSlected = false;
 
   @override
   void initState() {
@@ -47,8 +51,6 @@ class _ReportPageState extends State<ReportPage> {
         );
 
         await ReportController.createReport(context, report);
-      } else {
-        MySnackbar.warning(context, 'Lengkapi semua kolom dan pilih lampiran.');
       }
     } catch (e) {
       MySnackbar.failure(context, 'Gagal mengirim laporan: $e');
@@ -68,7 +70,8 @@ class _ReportPageState extends State<ReportPage> {
     img.Image resizedImage = img.copyResize(image, width: maxWidth);
     Directory tempDir = await Directory.systemTemp;
     String tempPath = tempDir.path;
-    File compressedFile = File('$tempPath/compressed_${imageFile.path.split('/').last}');
+    File compressedFile =
+        File('$tempPath/compressed_${imageFile.path.split('/').last}');
     await compressedFile.writeAsBytes(img.encodeJpg(resizedImage, quality: 50));
 
     return compressedFile;
@@ -88,6 +91,7 @@ class _ReportPageState extends State<ReportPage> {
       }
       setState(() {
         _attachments.add(attachment);
+        _imageReportNotSelected = false;
       });
     }
   }
@@ -124,7 +128,8 @@ class _ReportPageState extends State<ReportPage> {
                             const Duration(seconds: 1), (_) => DateTime.now()),
                         builder: (context, snapshot) {
                           return Text(
-                            DateFormat('dd-MM-yyyy HH:mm:ss').format(DateTime.now()),
+                            DateFormat('dd-MM-yyyy HH:mm:ss')
+                                .format(DateTime.now()),
                             style: GoogleFonts.poppins(
                                 fontSize: 15, fontWeight: FontWeight.bold),
                           );
@@ -175,70 +180,69 @@ class _ReportPageState extends State<ReportPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Catatan Patroli",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: _desc,
-                            maxLines: 4,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ],
+                    Text(
+                      "Catatan Patroli",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _desc,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (_) {
+                        setState(() {
+                          _notesNotSelected = false;
+                        });
+                      },
+                    ),
+                    if (_notesNotSelected)
+                      Text(
+                        'Please enter a reason',
+                        style: GoogleFonts.poppins(color: Colors.red),
+                      ),
                     const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Unggah Bukti",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          InkWell(
-                            onTap: _pickImage,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 15, horizontal: 20),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.camera_alt),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    "Pilih File",
-                                    style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                    Text(
+                      "Unggah Bukti",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    InkWell(
+                      onTap: _pickImage,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 15, horizontal: 20),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.camera_alt),
+                            const SizedBox(width: 10),
+                            Text(
+                              "Pilih File",
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (_imageReportNotSelected)
+                      Text(
+                        'Please select an image',
+                        style: GoogleFonts.poppins(color: Colors.red),
+                      ),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 10,
@@ -251,7 +255,8 @@ class _ReportPageState extends State<ReportPage> {
                               width: 100,
                               height: 100,
                               decoration: BoxDecoration(
-                                border: Border.all(color: Color(0xFF5F5C5C)),
+                                border:
+                                    Border.all(color: const Color(0xFF5F5C5C)),
                                 borderRadius: BorderRadius.circular(5.0),
                                 image: DecorationImage(
                                   image: FileImage(File(imageFile.path)),
@@ -263,7 +268,8 @@ class _ReportPageState extends State<ReportPage> {
                               bottom: -10,
                               left: 25,
                               child: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _removeImage(index),
                               ),
                             ),

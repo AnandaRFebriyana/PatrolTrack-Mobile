@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:get/get.dart';
 import 'package:patrol_track_mobile/components/background_auth.dart';
 import 'package:patrol_track_mobile/components/button.dart';
 import 'package:patrol_track_mobile/components/textfield_auth.dart';
@@ -66,19 +64,19 @@ class _LoginState extends State<Login> {
                 ],
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () => Get.toNamed('/forgot-pass'),
-                  child: Text(
-                    "Forgot Password?",
-                    style: GoogleFonts.poppins(color: Colors.grey),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.end,
+            //   children: <Widget>[
+            //     GestureDetector(
+            //       onTap: () => Get.toNamed('/forgot-pass'),
+            //       child: Text(
+            //         "Forgot Password?",
+            //         style: GoogleFonts.poppins(color: Colors.grey),
+            //       ),
+            //     ),
+            //   ],
+            // ),
+            const SizedBox(height: 20),
             MyButton(
               text: "Login",
               onPressed: () => AuthController.login(context, email, password),

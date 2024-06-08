@@ -3,18 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class MySnackbar {
-
-  static void show(BuildContext context, String title, String message, ContentType contentType) {
+  static void show(BuildContext context, String title, String message,
+      ContentType contentType) {
     Get.snackbar(
       '',
       '',
       barBlur: 0,
       backgroundColor: Colors.transparent,
       messageText: ClipRRect(
-        child: AwesomeSnackbarContent(
-          title: title,
-          message: message,
-          contentType: contentType,
+        child: Container(
+          padding: const EdgeInsets.only(top: 16.0),
+          child: AwesomeSnackbarContent(
+            title: 'Warning!',
+            message: 'Lengkapi semua kolom!',
+            contentType: ContentType.warning,
+          ),
         ),
       ),
       duration: const Duration(seconds: 2),
