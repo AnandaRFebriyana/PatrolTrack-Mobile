@@ -358,10 +358,12 @@ class _HomeState extends State<Home> {
             margin: const EdgeInsets.only(left: 10),
             width: 50,
             height: 50,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               image: DecorationImage(
-                image: AssetImage('assets/images/user_profile.jpeg'),
+                image: user.photo != null && user.photo!.isNotEmpty
+                    ? NetworkImage('https://patroltrack.my.id/storage/${user.photo}')
+                    : const AssetImage('assets/images/user_profile.jpeg') as ImageProvider,
                 fit: BoxFit.cover,
               ),
             ),

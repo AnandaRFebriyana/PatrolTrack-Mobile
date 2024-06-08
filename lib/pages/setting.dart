@@ -59,10 +59,12 @@ class _SettingState extends State<Setting> {
         Container(
           width: 90,
           height: 90,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             image: DecorationImage(
-              image: AssetImage('assets/images/user_profile.jpeg'),
+              image: user.photo != null && user.photo!.isNotEmpty
+                    ? NetworkImage('https://patroltrack.my.id/storage/${user.photo}')
+                    : const AssetImage('assets/images/user_profile.jpeg') as ImageProvider,
               fit: BoxFit.cover,
             ),
           ),
@@ -96,7 +98,8 @@ class _SettingState extends State<Setting> {
     );
   }
 
-  Widget buildTextField(TextEditingController controller, IconData icon, {int maxLines = 1}) {
+  Widget buildTextField(TextEditingController controller, IconData icon,
+      {int maxLines = 1}) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF2F2F3),
