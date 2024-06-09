@@ -38,4 +38,20 @@ class ReportController {
       return [];
     }
   }
+
+  static Future<void> createReport(BuildContext context, Report report) async {
+    try {
+      await ReportService.postReport(report);
+      MyQuickAlert.success(
+        context,
+        'Report created successfully',
+        onConfirmBtnTap: () {
+          Navigator.of(context).pop();
+          Get.toNamed('/menu-nav');
+        },
+      );
+    } catch (e) {
+      print('Error $e');
+    }
+  }
 }

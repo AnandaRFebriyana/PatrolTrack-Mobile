@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,15 +12,11 @@ import 'package:patrol_track_mobile/core/controllers/report_controller.dart';
 import 'package:patrol_track_mobile/core/models/report.dart';
 import 'package:patrol_track_mobile/components/button.dart';
 import 'package:patrol_track_mobile/components/header.dart';
-import 'package:patrol_track_mobile/components/snackbar.dart';
-import 'package:patrol_track_mobile/core/controllers/report_controller.dart';
-import 'package:patrol_track_mobile/core/models/report.dart';
+
 
 class ReportPage extends StatefulWidget {
   final String scanResult;
-  final String scanResult;
 
-  ReportPage({required this.scanResult});
   ReportPage({required this.scanResult});
 
   @override
@@ -30,15 +25,14 @@ class ReportPage extends StatefulWidget {
 
 class _ReportPageState extends State<ReportPage> {
   late TextEditingController _result;
-  late TextEditingController _result;
-  String _status = 'Aman';
+  String? _status;
   late String _currentTime;
   final TextEditingController _desc = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   List<File> _attachments = [];
   bool _notesNotSelected = false;
   bool _imageReportNotSelected = false;
-  // bool _statusNotSlected = false;
+  bool _statusNotSlected = false;
 
   @override
   void initState() {
@@ -58,16 +52,20 @@ class _ReportPageState extends State<ReportPage> {
     setState(() {
       _notesNotSelected = _desc.text.isEmpty;
       _imageReportNotSelected = _attachments.isEmpty;
-      // _statusNotSelected = _status.isEmpty;
+      _statusNotSlected = _status == null || _status!.isEmpty;
     });
 
+    print('Status not selected: $_statusNotSlected');
+    print('Notes not selected: $_notesNotSelected');
+    print('Image report not selected: $_imageReportNotSelected');
+
     // if(!_notesNotSelected && !_imageReportNotSelected && !_statusNotSelected) {
-    if(!_notesNotSelected && !_imageReportNotSelected ) {
+    if(!_statusNotSlected && !_notesNotSelected && !_imageReportNotSelected ) {
     try {
         final report = Report(
           locationId: int.parse(_result.text),
           locationName: "Location Name",
-          status: _status,
+          status: _status!,
           description: _desc.text,
           attachments: _attachments,
           createdAt: DateTime.now(),
@@ -75,7 +73,10 @@ class _ReportPageState extends State<ReportPage> {
         await ReportController.createReport(context, report);
     } catch (e) {
       MySnackbar.failure(context, 'Gagal mengirim laporan: $e');
+      // MySnackbar.failure(context, 'Gagal mengirim laporan: $e');
     }
+  } else {
+    MySnackbar.failure(context, 'Lengkapi semua kolom.');
   }
   }
 
@@ -111,17 +112,7 @@ class _ReportPageState extends State<ReportPage> {
         fileSizeInBytes = attachment.lengthSync();
         print('Compressed Photo Size: $fileSizeInBytes bytes');
       }
-      File attachment = File(pickedFile.path);
-      int fileSizeInBytes = attachment.lengthSync();
-      print('Photo Size: $fileSizeInBytes bytes');
-
-      if (fileSizeInBytes > 2048 * 1024) {
-        attachment = await compressImage(attachment);
-        fileSizeInBytes = attachment.lengthSync();
-        print('Compressed Photo Size: $fileSizeInBytes bytes');
-      }
       setState(() {
-        _attachments.add(attachment);
         _attachments.add(attachment);
         _imageReportNotSelected = false;
       });
@@ -132,14 +123,10 @@ class _ReportPageState extends State<ReportPage> {
     setState(() {
       _attachments.removeAt(index);
     });
-      _attachments.removeAt(index);
-    });
   }
 
   @override
   void dispose() {
-    _result.dispose();
-    _desc.dispose();
     _result.dispose();
     _desc.dispose();
     super.dispose();
@@ -209,6 +196,7 @@ class _ReportPageState extends State<ReportPage> {
                         padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
                         child: DropdownButton<String>(
                           value: _status,
+                          hint: Text('Pilih Status Lokasi'),
                           isExpanded: true,
                           items: <String>['Aman', 'Tidak Aman'].map((String value) {
                             return DropdownMenuItem<String>(
@@ -218,19 +206,19 @@ class _ReportPageState extends State<ReportPage> {
                           }).toList(),
                           onChanged: (String? newValue) {
                             setState(() {
-                              _status = newValue!;
-                              // _statusNotSlected = false;
+                              _status = newValue;
+                              _statusNotSlected = false;
                             });
                           },
                           underline: Container(),
                         ),
                       ),
                     ),
-                    // if (_statusNotSelected)
-                    //   Text(
-                    //     'Please select a status',
-                    //     style: TextStyle(color: Colors.red),
-                    //   ),
+                    if (_statusNotSlected)
+                      Text(
+                        'Please select a status',
+                        style: TextStyle(color: Colors.red),
+                      ),
 
                     SizedBox(height: 16.0),
                     Text(
@@ -242,7 +230,6 @@ class _ReportPageState extends State<ReportPage> {
                     ),
                     const SizedBox(height: 10),
                     TextField(
-                      controller: _desc,
                       controller: _desc,
                       maxLines: 4,
                       decoration: const InputDecoration(
@@ -303,8 +290,6 @@ class _ReportPageState extends State<ReportPage> {
                       runSpacing: 10,
                       children: _attachments.map((imageFile) {
                         int index = _attachments.indexOf(imageFile);
-                      children: _attachments.map((imageFile) {
-                        int index = _attachments.indexOf(imageFile);
                         return Stack(
                           children: [
                             Container(
@@ -336,8 +321,6 @@ class _ReportPageState extends State<ReportPage> {
                     const SizedBox(height: 30),
                     MyButton(
                       text: "Kirim",
-                      onPressed: _saveReport,
-                    ),
                       onPressed: _saveReport,
                     ),
                   ],
