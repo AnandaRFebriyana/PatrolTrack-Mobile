@@ -18,20 +18,21 @@ class PermissionService {
       request.fields['permission_date'] = permission.permissionDate;
       request.fields['reason'] = permission.reason;
 
-      // if (permission.information != null) {
-      //   request.files.add(
-      //     await http.MultipartFile.fromPath('information', permission.information!.path),
-      //   );
-      // }
       if (permission.information != null) {
-        final mimeTypeData = lookupMimeType(permission.information!.path, headerBytes: [0xFF, 0xD8])?.split('/');
         request.files.add(
-          await http.MultipartFile.fromPath(
-            'information', permission.information!.path,
-            contentType: mimeTypeData != null ? MediaType(mimeTypeData[0], mimeTypeData[1]) : null,
-          ),
+          await http.MultipartFile.fromPath('information', permission.information!.path),
         );
       }
+      // if (permission.information != null) {
+      //   final mimeTypeData = lookupMimeType(permission.information!.path,
+      //       headerBytes: [0xFF, 0xD8])?.split('/');
+      //   request.files.add(
+      //     await http.MultipartFile.fromPath(
+      //       'information', permission.information!.path,
+      //       contentType: mimeTypeData != null ? MediaType(mimeTypeData[0], mimeTypeData[1]) : null,
+      //     ),
+      //   );
+      // }
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
 
