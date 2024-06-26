@@ -45,7 +45,6 @@ class ReportService {
   static Future<void> postReport(Report report) async {
     try {
       String? token = await Constant.getToken();
-      print('Token: $token');
       final url = Uri.parse('${Constant.BASE_URL}/report/store');
       final request = http.MultipartRequest('POST', url);
 
@@ -55,14 +54,10 @@ class ReportService {
       request.fields['location_id'] = report.locationId.toString();
       request.fields['status'] = report.status;
       request.fields['description'] = report.description;
-
-      // for (File _attachments in report.attachments) {
-      //   request.files.add(
-      //     await http.MultipartFile.fromPath('attachments[]', _attachments.path),
+      
       for (File attachment in report.attachments) {
         request.files.add(
           await http.MultipartFile.fromPath('attachment[]', attachment.path),
-
         );
       }
 
@@ -73,7 +68,6 @@ class ReportService {
       } else {
         // throw 'Status Code: ${response.statusCode}';
         String errorMessage = await response.stream.bytesToString();
-        print('Failed to create report: $errorMessage');
         throw 'Failed to create report: $errorMessage';
       }
     } catch (e) {

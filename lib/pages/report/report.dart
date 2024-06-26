@@ -73,11 +73,10 @@ class _ReportPageState extends State<ReportPage> {
         await ReportController.createReport(context, report);
     } catch (e) {
       MySnackbar.failure(context, 'Gagal mengirim laporan: $e');
-      // MySnackbar.failure(context, 'Gagal mengirim laporan: $e');
     }
-  } else {
+    } else {
     MySnackbar.failure(context, 'Lengkapi semua kolom.');
-  }
+    }
   }
 
   Future<File> compressImage(File imageFile) async {

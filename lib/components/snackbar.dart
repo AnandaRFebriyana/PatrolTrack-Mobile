@@ -14,9 +14,9 @@ class MySnackbar {
         child: Container(
           padding: const EdgeInsets.only(top: 16.0),
           child: AwesomeSnackbarContent(
-            title: 'Warning!',
-            message: 'Lengkapi semua kolom!',
-            contentType: ContentType.warning,
+            title: title,
+            message: message,
+            contentType: contentType,
           ),
         ),
       ),

@@ -24,8 +24,7 @@ class PermissionService {
       //   );
       // }
       if (permission.information != null) {
-        final mimeTypeData = lookupMimeType(permission.information!.path,
-            headerBytes: [0xFF, 0xD8])?.split('/');
+        final mimeTypeData = lookupMimeType(permission.information!.path, headerBytes: [0xFF, 0xD8])?.split('/');
         request.files.add(
           await http.MultipartFile.fromPath(
             'information', permission.information!.path,
